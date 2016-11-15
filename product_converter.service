@@ -1,0 +1,4 @@
+<service name="product_converter">
+  <summary>Create all product build descriptions</summary>
+  <description>This service the successor of the OBS product converter.</description>
+</service>

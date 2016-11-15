@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Super simple wrapper just to run over all prodct files
+
+if [ "$1" != "--outdir" -o ! -d "$2" ]; then
+  echo "no directory specified via --outdir parameter"
+  exit 1
+fi
+outdir="$2"
+
+# create all build descriptions
+for file in *.product; do
+  ${0%/*}/create_single_product "$file" "$outdir" "$OBS_SERVICE_PROJECT" || exit 1
+done
+
+# create _multibuild
+echo "<multibuild>" > _multibuild
+for file in *.spec; do
+  echo "<package>${file%.spec}</package>" >> _multibuild
+done
+for file in *.kiwi; do
+  echo "<package>${file%.kiwi}</package>" >> _multibuild
+done
+echo "</multibuild>" >> _multibuild
+
