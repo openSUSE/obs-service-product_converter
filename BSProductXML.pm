@@ -193,6 +193,7 @@ our $product = [
              'producttheme',
              'betaversion',
              'mainproduct',
+             'create_flavors',
              [ 'linguas' =>
                [],
                [[ 'language' => '_content' ]],
@@ -276,7 +277,6 @@ our $productdesc = [
             'mediastyle',
             'firmware',
             'registration',
-            'create_repomd',
             'sourcemedia',
             'debugmedia',
             'create_pattern',
@@ -293,8 +293,6 @@ our $productdesc = [
             'allow_overflow',
             'next_media_in_set',
             'size',
-            'datadir',
-            'descriptiondir',
             [[ 'preselected_patterns' => 
                [[ 'pattern' =>
                   'name',

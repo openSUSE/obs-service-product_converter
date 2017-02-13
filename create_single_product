@@ -272,7 +272,6 @@ sub createProductOptions($$$)
     $varsH{MULTIPLE_MEDIA} = "true" if (defined($medium->{'debugmedia'}) && $medium->{'debugmedia'} > 1);
     $varsH{RUN_MEDIA_CHECK} = "true" if (defined($medium->{'run_media_check'})) && $medium->{'run_media_check'} ne "no" && $medium->{'run_media_check'} eq "false";
     $varsH{RUN_ISOHYBRID} = "true" if (defined($medium->{'run_hybridiso'})) && $medium->{'run_hybridiso'} eq "true";
-    $varsH{CREATE_REPOMD} = "true" if (defined($medium->{'create_repomd'})) && $medium->{'create_repomd'} ne "no" && $medium->{'create_repomd'} ne "false";
     $varsH{MAKE_LISTINGS} = 'false' if (defined($medium->{'run_make_listings'})) && $medium->{'run_make_listings'} ne "yes" && $medium->{'run_make_listings'} ne "true";
     $varsH{SHA1OPT} = "-x";
     $varsH{REPO_ONLY} = "true" if (defined($medium->{'repo_only'})) && $medium->{'repo_only'} ne "no" && $medium->{'repo_only'} ne "false";
@@ -324,16 +323,6 @@ sub createProductOptions($$$)
 
     my %info;
     $info{'VENDOR'}       = $product->{'vendor'};
-    if (defined($medium->{'descriptiondir'})) {
-	$info{'DESCRDIR'}     = $medium->{'descriptiondir'};
-    } else {
-	$info{'DESCRDIR'}     = $product->{'installconfig'}->{'descriptiondir'};
-    }
-    if (defined($medium->{'datadir'})) {
-	$info{'DATADIR'}      = $medium->{'datadir'};
-    } else {
-	$info{'DATADIR'}      = $product->{'installconfig'}->{'datadir'};
-    }
     if (defined($obsname) && (defined($project)) && ("$project" ne "")){
         $info{'REPOID'}       = "obsproduct://".$obsname."/".$project."/".$product->{'name'}."/".$product->{'version'}."/".$medium->{'flavor'}."/".join( "-", @allarchs );
     }
@@ -923,54 +912,45 @@ sub writeProductSPECfile( $$$$ )
     $productdependencies=createProductDependencyLines($product->{'productdependency'}) if defined($product->{'productdependency'});
 
     my $mediaStyle = getMediaStyle($prodRef);
-    if ($mediaStyle =~ /^suse-1[12].[123]$/ || $mediaStyle =~ /^suse-sle11/) {
-      $productprovides.="Provides:       product()\n";
-      $productprovides.="Provides:       product($product->{'name'}) = %version-%release\n";
-    } else {
-      # openSUSE 13.2 and SLE 12 case
-      die("product register release is obsolete") if defined($product->{register}->{release}); # was used for OEM products on SLE 10
-      # Note: was also used for OEM products on SLE 10 in a different way
-      die("product register flavor with invalid content") if defined($product->{register}->{flavor}) &&
-         $product->{register}->{flavor} ne 'module' && $product->{register}->{flavor} ne 'extension';
-      die("product release is not set but required") unless defined($product->{release}) and $product->{release} ne "";
-      $productprovides.="Provides:       product() = $product->{name}\n";
-      $productprovides.="Provides:       product(".$product->{name}.") = $product->{version}-$product->{release}\n";
-      foreach my $r ( @{$product->{register}->{pool}->{repository}} ) {
-         if ($r->{'url'}) {
-           die("conflicting values url<>project") if defined($r->{'project'});
-           die("conflicting values url<>name")    if defined($r->{'name'});
-           die("conflicting values url<>medium")   if defined($r->{'medium'});
-         } else {
-           die("missing project in pool repository") unless defined($r->{'project'});
-           die("missing name in pool repository")    unless defined($r->{'name'});
-           die("missing medium in pool repository")   unless defined($r->{'medium'});
-         }
-      }
-      foreach my $dt ( @{$product->{register}->{updates}->{distrotarget}} ) {
-         $productprovides.="%ifarch $dt->{arch}\n" if $dt->{'arch'};
-         $productprovides.="Provides:       product-register-target() = ".escapeProvides($dt->{'_content'})."\n";
-         $productprovides.="%endif\n" if $dt->{'arch'};
-         next;
-      }
-      foreach my $shortsummary ( @{$product->{'shortsummary'}} ){
-        $productprovides.="Provides:       product-label() = ".escapeProvides($shortsummary->{'_content'})."\n" if ( ! $shortsummary->{'language'} );
-      }
-      my $cpe = getCpeId($prodRef, $product);
-      $productprovides.="Provides:       product-cpeid() = ".escapeProvides($cpe)."\n" if $cpe;
-#      $productprovides.="Provides:       product-type()\n";
-#      $productprovides.="Provides:       product-flags()\n";
-      foreach my $url ( @{$product->{'urls'}->{'url'}} ){
-        $productprovides.="Provides:       product-url(".escapeProvides($url->{'name'}).") = ".escapeProvides($url->{'_content'})."\n";
-      }
-      foreach my $repo ( @{$product->{register}->{updates}->{repository}} ) {
-         $productprovides.="%ifarch $repo->{arch}\n" if $repo->{arch};
-         $productprovides.="Provides:       product-updates-repoid() = ".escapeProvides("obsrepository://$obsname/$repo->{project}/$repo->{name}")."\n";
-         $productprovides.="%endif\n" if $repo->{arch};
-      }
-      if ($product->{register}->{flavor}) {
-         $productprovides.="Provides:       product-register-flavor() = ";
-         $productprovides.=escapeProvides($product->{register}->{flavor})."\n";
-      }
+    # openSUSE 13.2 and SLE 12 case
+    die("product register release is obsolete") if defined($product->{register}->{release}); # was used for OEM products on SLE 10
+    # Note: was also used for OEM products on SLE 10 in a different way
+    die("product register flavor with invalid content") if defined($product->{register}->{flavor}) &&
+       $product->{register}->{flavor} ne 'module' && $product->{register}->{flavor} ne 'extension';
+    die("product release is not set but required") unless defined($product->{release}) and $product->{release} ne "";
+    $productprovides.="Provides:       product() = $product->{name}\n";
+    $productprovides.="Provides:       product(".$product->{name}.") = $product->{version}-$product->{release}\n";
+    foreach my $r ( @{$product->{register}->{pool}->{repository}} ) {
+       if ($r->{'url'}) {
+         die("conflicting values url<>project") if defined($r->{'project'});
+         die("conflicting values url<>name")    if defined($r->{'name'});
+         die("conflicting values url<>medium")   if defined($r->{'medium'});
+       } else {
+         die("missing project in pool repository") unless defined($r->{'project'});
+         die("missing name in pool repository")    unless defined($r->{'name'});
+         die("missing medium in pool repository")   unless defined($r->{'medium'});
+       }
+    }
+    foreach my $dt ( @{$product->{register}->{updates}->{distrotarget}} ) {
+       $productprovides.="%ifarch $dt->{arch}\n" if $dt->{'arch'};
+       $productprovides.="Provides:       product-register-target() = ".escapeProvides($dt->{'_content'})."\n";
+       $productprovides.="%endif\n" if $dt->{'arch'};
+       next;
+    }
+    foreach my $shortsummary ( @{$product->{'shortsummary'}} ){
+      $productprovides.="Provides:       product-label() = ".escapeProvides($shortsummary->{'_content'})."\n" if ( ! $shortsummary->{'language'} );
+    }
+    my $cpe = getCpeId($prodRef, $product);
+    $productprovides.="Provides:       product-cpeid() = ".escapeProvides($cpe)."\n" if $cpe;
+#    $productprovides.="Provides:       product-type()\n";
+#    $productprovides.="Provides:       product-flags()\n";
+    foreach my $url ( @{$product->{'urls'}->{'url'}} ){
+      $productprovides.="Provides:       product-url(".escapeProvides($url->{'name'}).") = ".escapeProvides($url->{'_content'})."\n";
+    }
+    foreach my $repo ( @{$product->{register}->{updates}->{repository}} ) {
+       $productprovides.="%ifarch $repo->{arch}\n" if $repo->{arch};
+       $productprovides.="Provides:       product-updates-repoid() = ".escapeProvides("obsrepository://$obsname/$repo->{project}/$repo->{name}")."\n";
+       $productprovides.="%endif\n" if $repo->{arch};
     }
     foreach my $predecessor ( @{$product->{'predecessor'}} ){
       $productprovides.="Obsoletes:       product:$predecessor\n";
@@ -988,16 +968,29 @@ sub writeProductSPECfile( $$$$ )
       $productprovides.="Obsoletes:      ".$product->{name}."-SP".$product->{'patchlevel'}."-migration\n";  # release package name
       $productprovides.="Obsoletes:      product:".$product->{name}."-SP".$product->{'patchlevel'}."-migration\n"; # product name
     }
-    $productprovides.="Requires:       product_flavor($product->{name})\n";
-    $product_flavors.=createSPECfileFlavors($prodRef,$product);
 
     # Create product file to be packaged
     my $zypp_product_file = createProductFile($prodRef,$product);
-       $zypp_product_file.= createFlavorReadme($prodRef,$product);
     my $os_release_file = createOsReleaseFile($prodRef,$product);
 
-    my $str;
+    #
+    # Create product flavors for each medium
+    #
+    my $create_flavors = $product->{'buildconfig'}->{'create_flavors'};
+    if (defined($create_flavors) && $create_flavors ne 'false') {
+      if ($product->{register}->{flavor}) {
+         $productprovides.="Provides:       product-register-flavor() = ";
+         $productprovides.=escapeProvides($product->{register}->{flavor})."\n";
+      }
+      $productprovides.="Requires:       product_flavor($product->{name})\n";
+      $product_flavors.=createSPECfileFlavors($prodRef,$product);
+      $zypp_product_file.= createFlavorReadme($prodRef,$product);
+    }
 
+    #
+    # Create spec file
+    #
+    my $str;
     if ("$infile" eq ""){
       my ($sec,$min,$hour,$mday,$mon,$year,$wday,$ydat,$isdst)=localtime();
       $year += 1900;
