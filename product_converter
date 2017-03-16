@@ -10,6 +10,10 @@ outdir="$2"
 
 # create all build descriptions
 for file in *.product; do
+  if [ ! -r "$file" ]; then
+    echo "ERROR: $file is not readable"
+    exit 1
+  fi
   ${0%/*}/create_single_product "$PWD/$file" "$outdir" "$OBS_SERVICE_PROJECT" || exit 1
 done
 
