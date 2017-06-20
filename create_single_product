@@ -770,22 +770,6 @@ sub createInstsource( $$$ )
     return ($re, \%$supportStates);
 }
 
-sub createRepository
-{
-    # This is for a dummy entry, it is required by the kiwi DTD, but not used
-    # for installation medias.
-    my( $prodRef ) = @_;
-    my @repository;
-    my $source;
-    my $dummydir = "/var/lib/empty";
-
-    # Do we have ever a different repo type than "yast" on products ?
-    $source->{ 'path' } = $dummydir;
-    push @repository, { 'type' => 'yast2', 'source' => $source };
-
-    return \@repository;
-}
-
 sub createFlavorReadme( $$ ){
     my($prodRef,$product)=@_;
     my $reame_file = "";
@@ -1586,7 +1570,6 @@ foreach my $medium ( @$media ){
               die("Illegal support key $supportstates{$key} for $key\n") unless grep { /^$supportstates{$key}$/ } ( "l3", "l2", "acc", "unsupported" );
             }
           }
-          $kiwi->{repository} = createRepository ( $prodRef );
       
           my $archStr;
           my @archsets = @{$arch->{archset}};
