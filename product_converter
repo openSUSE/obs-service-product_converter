@@ -17,8 +17,12 @@ for file in *.product; do
   ${0%/*}/create_single_product "$PWD/$file" "$outdir" "$OBS_SERVICE_PROJECT" || exit 1
 done
 
-# create _multibuild
-pushd "$outdir"
+# create _multibuild, except user provided one already
+if [ -e "_multibuild" ]; then
+  echo "SKIPPING _multibuild generation due to provided file"
+  exit 0
+fi
+
 echo "<multibuild>" > "$outdir/_multibuild"
 for file in *.spec; do
   echo "<package>${file%.spec}</package>" >> "$outdir/_multibuild"
@@ -27,5 +31,5 @@ for file in *.kiwi; do
   echo "<package>${file%.kiwi}</package>" >> "$outdir/_multibuild"
 done
 echo "</multibuild>" >> "$outdir/_multibuild"
-popd
 
+exit 0
