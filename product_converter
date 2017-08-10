@@ -30,7 +30,9 @@ for file in "$outdir"/*.spec "$outdir/"*.kiwi; do
     exit 1
   fi
   container="${file##*/}"
-  echo "  <package>${container%.spec}</package>" >> "$outdir/_multibuild"
+  container="${container%.kiwi}"
+  container="${container%.spec}"
+  echo "  <package>${container}</package>" >> "$outdir/_multibuild"
 done
 echo "</multibuild>" >> "$outdir/_multibuild"
 
