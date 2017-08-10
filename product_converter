@@ -24,11 +24,13 @@ if [ -e "_multibuild" ]; then
 fi
 
 echo "<multibuild>" > "$outdir/_multibuild"
-for file in *.spec; do
-  echo "  <package>${file%.spec}</package>" >> "$outdir/_multibuild"
+for file in "$outdir"/*.spec; do
+  container="${file##*/}"
+  echo "  <package>${container%.spec}</package>" >> "$outdir/_multibuild"
 done
-for file in *.kiwi; do
-  echo "  <package>${file%.kiwi}</package>" >> "$outdir/_multibuild"
+for file in "$outdir/"*.kiwi; do
+  container="${file##*/}"
+  echo "  <package>${container%.kiwi}</package>" >> "$outdir/_multibuild"
 done
 echo "</multibuild>" >> "$outdir/_multibuild"
 
