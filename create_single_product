@@ -961,7 +961,7 @@ sub writeProductSPECfile( $$$$ )
     # Create product flavors for each medium
     #
     my $create_flavors = $product->{'buildconfig'}->{'create_flavors'};
-    if (defined($create_flavors) && $create_flavors ne 'false') {
+    if (defined($create_flavors) && $create_flavors eq 'true') {
       if ($product->{register}->{flavor}) {
          $productprovides.="Provides:       product-register-flavor() = ";
          $productprovides.=escapeProvides($product->{register}->{flavor})."\n";
@@ -1603,11 +1603,12 @@ foreach my $medium ( @$media ){
             }
           }
 
-          my $file = "$productname-$type-$flavor-$archStr";
+          my $file = "$productname-$type";
+          $file .= "-$flavor" if $flavor;
+          $file .= "-$archStr";
           die("illegal kiwi product: $file\n") if $file =~ /^[_\.]/;
           die("illegal kiwi product: $file\n") if $file =~ /[\/\000-\037]/;
       
-          my $pkgName = "_product:$file";
           my $outFile = "$outdir/$file.kiwi";
           my $supportFile= "$outdir/$file.kwd";
       
