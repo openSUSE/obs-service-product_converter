@@ -324,7 +324,8 @@ sub createProductOptions($$$)
     my %info;
     $info{'VENDOR'}       = $product->{'vendor'};
     if (defined($obsname) && (defined($project)) && ("$project" ne "")){
-        $info{'REPOID'}       = "obsproduct://".$obsname."/".$project."/".$product->{'name'}."/".$product->{'version'}."/".$medium->{'flavor'}."/".join( "-", @allarchs );
+	my $flavor = $medium->{'flavor'} || $medium->{'type'}; 
+        $info{'REPOID'}       = "obsproduct://".$obsname."/".$project."/".$product->{'name'}."/".$product->{'version'}."/".$flavor."/".join( "-", @allarchs );
     }
     if (defined($medium->{'preselected_patterns'})){
         $info{'PATTERNS'} .= join(' ',map( $_->{'name'},@{$medium->{'preselected_patterns'}->[0]->{'pattern'}}));
@@ -1514,6 +1515,8 @@ if( $opt_m ) {
     print "Generating only media set $opt_m, due to commandline switch\n";
 }
 
+my $create_flavors = $product->{'buildconfig'}->{'create_flavors'};
+
 foreach my $medium ( @$media ){
     my $type = $medium->{type};
     my $flavor = $medium->{flavor};
@@ -1595,8 +1598,10 @@ foreach my $medium ( @$media ){
           if ( $kiwi->{instsource}->{repopackages}[0] && (!defined($medium->{'skip_release_package'}) || $medium->{'skip_release_package'} ne "true") ){
             my $addarch = join( ",", @productarch );
             push @{$kiwi->{instsource}->{repopackages}[0]->{repopackage}}, { "name" => $releasepkgname, addarch => $addarch };
-            # add the flavor package
-            push @{$kiwi->{instsource}->{repopackages}[0]->{repopackage}}, { "name" => "$releasepkgname-$flavor", addarch => $addarch };
+            if (defined($create_flavors) && $create_flavors eq 'true') {
+              # add the flavor package
+              push @{$kiwi->{instsource}->{repopackages}[0]->{repopackage}}, { "name" => "$releasepkgname-$flavor", addarch => $addarch };
+	    }
             if (%supportstates) {
               $supportstates{$releasepkgname} ||= 'l3';
               $supportstates{"$releasepkgname-$flavor"} ||= 'l3';
