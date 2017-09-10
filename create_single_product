@@ -543,6 +543,8 @@ sub useToPackages( $$$ )
 	    die( "ERROR: Patterns are not supported for repopackages!\n" );
 	}
     }
+    # sort package list by name
+    @packages = sort { lc($a->{name}) cmp lc($b->{name}) } @packages;
     return (\@packages, \%supportstates);
 }
 
