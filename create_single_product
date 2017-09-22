@@ -267,7 +267,9 @@ sub createProductOptions($$$)
       $varsH{MEDIUM_NAME} = $medium->{'name'}."-".join( "-", @allarchs );
     }
     $varsH{PRODUCT_THEME} = $product->{'buildconfig'}->{'producttheme'};
-    $varsH{MULTIPLE_MEDIA} = "no";
+    $varsH{SEPERATE_MEDIA} = "false";
+    $varsH{SEPERATE_MEDIA} = "true" if defined($product->{'buildconfig'}->{'seperate_media'});
+    $varsH{MULTIPLE_MEDIA} = "false";
     $varsH{MULTIPLE_MEDIA} = "true" if (defined($medium->{'sourcemedia'}) && $medium->{'sourcemedia'} > 1);
     $varsH{MULTIPLE_MEDIA} = "true" if (defined($medium->{'debugmedia'}) && $medium->{'debugmedia'} > 1);
     $varsH{RUN_MEDIA_CHECK} = "true" if (defined($medium->{'run_media_check'})) && $medium->{'run_media_check'} ne "no" && $medium->{'run_media_check'} eq "false";

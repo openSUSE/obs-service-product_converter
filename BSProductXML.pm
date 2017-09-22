@@ -194,6 +194,7 @@ our $product = [
              'betaversion',
              'mainproduct',
              'create_flavors',
+             'seperate_media',
              [ 'linguas' =>
                [],
                [[ 'language' => '_content' ]],
