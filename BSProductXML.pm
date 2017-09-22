@@ -194,7 +194,6 @@ our $product = [
              'betaversion',
              'mainproduct',
              'create_flavors',
-             'seperate_media',
              [ 'linguas' =>
                [],
                [[ 'language' => '_content' ]],
@@ -280,6 +279,7 @@ our $productdesc = [
             'registration',
             'sourcemedia',
             'debugmedia',
+            'seperate',
             'create_pattern',
             'ignore_missing_packages',      # may be "true", default for mediastyle 11.3 and before
             'ignore_missing_meta_packages', # may be "true", default for mediastyle 11.3 and before

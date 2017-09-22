@@ -268,7 +268,7 @@ sub createProductOptions($$$)
     }
     $varsH{PRODUCT_THEME} = $product->{'buildconfig'}->{'producttheme'};
     $varsH{SEPERATE_MEDIA} = "false";
-    $varsH{SEPERATE_MEDIA} = "true" if defined($product->{'buildconfig'}->{'seperate_media'});
+    $varsH{SEPERATE_MEDIA} = "true" if (defined($medium->{'seperate'}) && $medium->{'seperate'} eq 'true');
     $varsH{MULTIPLE_MEDIA} = "false";
     $varsH{MULTIPLE_MEDIA} = "true" if (defined($medium->{'sourcemedia'}) && $medium->{'sourcemedia'} > 1);
     $varsH{MULTIPLE_MEDIA} = "true" if (defined($medium->{'debugmedia'}) && $medium->{'debugmedia'} > 1);
