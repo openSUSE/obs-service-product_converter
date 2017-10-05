@@ -279,7 +279,7 @@ our $productdesc = [
             'registration',
             'sourcemedia',
             'debugmedia',
-            'seperate',
+            'separate',
             'create_pattern',
             'ignore_missing_packages',      # may be "true", default for mediastyle 11.3 and before
             'ignore_missing_meta_packages', # may be "true", default for mediastyle 11.3 and before

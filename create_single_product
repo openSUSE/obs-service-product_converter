@@ -268,7 +268,7 @@ sub createProductOptions($$$)
     }
     $varsH{PRODUCT_THEME} = $product->{'buildconfig'}->{'producttheme'};
     $varsH{SEPERATE_MEDIA} = "false";
-    $varsH{SEPERATE_MEDIA} = "true" if (defined($medium->{'seperate'}) && $medium->{'seperate'} eq 'true');
+    $varsH{SEPARATE_MEDIA} = "true" if (defined($medium->{'separate'}) && $medium->{'separate'} eq 'true');
     $varsH{MULTIPLE_MEDIA} = "false";
     $varsH{MULTIPLE_MEDIA} = "true" if (defined($medium->{'sourcemedia'}) && $medium->{'sourcemedia'} > 1);
     $varsH{MULTIPLE_MEDIA} = "true" if (defined($medium->{'debugmedia'}) && $medium->{'debugmedia'} > 1);
@@ -532,7 +532,7 @@ sub useToPackages( $$$ )
                         }
 			push @packages, \%tmp;
 
-                        # seperate list of supportstatus values if defined
+                        # separate list of supportstatus values if defined
                         if (defined($addPack->{supportstatus})) {
 			   my %stmp;
                            $stmp{$addPack->{name}} = $addPack->{supportstatus};
