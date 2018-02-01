@@ -279,18 +279,16 @@ sub createProductOptions($$$)
 
     # explicit removal of additional tree
     $varsH{DROP_REPOSITORY} = "true" if (defined($medium->{'drop_repo'})) && $medium->{'drop_repo'} ne "no" && $medium->{'drop_repo'} ne "false";
-    unless ($mediaStyle =~ /^suse-1[12]/ || $mediaStyle =~ /^suse-sle11/) {
-      # remove tree for media style sle12/13.2 by default
-      $varsH{DROP_REPOSITORY} = "true" unless defined($medium->{'drop_repo'}) || $varsH{REPO_ONLY} || $varsH{DROP_REPOSITORY};
-      foreach my $shortsummary ( @{$product->{'shortsummary'}} ){
-        $varsH{PRODUCT_SUMMARY} = $shortsummary->{'_content'} if ( ! $shortsummary->{'language'} );
-      }
-      die("No short summary defined, but required for current media styles") unless $varsH{PRODUCT_SUMMARY};
-      $varsH{PRODUCT_RELEASE} = $product->{'release'} if defined($product->{'release'});
+    # remove tree for media style sle12/13.2 by default
+    $varsH{DROP_REPOSITORY} = "true" unless defined($medium->{'drop_repo'}) || $varsH{REPO_ONLY} || $varsH{DROP_REPOSITORY};
+    foreach my $shortsummary ( @{$product->{'shortsummary'}} ){
+      $varsH{PRODUCT_SUMMARY} = $shortsummary->{'_content'} if ( ! $shortsummary->{'language'} );
     }
+    die("No short summary defined, but required for current media styles") unless $varsH{PRODUCT_SUMMARY};
+    $varsH{PRODUCT_RELEASE} = $product->{'release'} if defined($product->{'release'});
 
-    # switch to sha256 sums except for old distros
-    $varsH{SHA1OPT} .= " -2" unless $mediaStyle eq "suse-11.1" || $mediaStyle eq "suse-11.2" || $mediaStyle eq "suse-11.3" || $mediaStyle eq "suse-sle11-sp2";
+    # switch to sha256 sums
+    $varsH{SHA1OPT} .= " -2";
 
     $varsH{VENDOR} = $product->{'vendor'};
     $varsH{DISTNAME} = $product->{'name'};
@@ -331,33 +329,12 @@ sub createProductOptions($$$)
     if (defined($medium->{'preselected_patterns'})){
         $info{'PATTERNS'} .= join(' ',map( $_->{'name'},@{$medium->{'preselected_patterns'}->[0]->{'pattern'}}));
     }
-    if ($mediaStyle =~ "^suse-11" || $mediaStyle =~ "^suse-12" || $mediaStyle =~ "^suse-sle11") {
-       $info{'DISTRIBUTION'} = $product->{'installconfig'}->{'distribution'};
-       $info{'NAME'}         = $product->{'name'};
-       $info{'VERSION'}      = $product->{'version'};
-       $info{'SP_VERSION'}   = $product->{'patchlevel'} if (defined($product->{'patchlevel'}));
-
-       foreach my $summary ( @{$product->{'summary'}} ){
-         $info{'LABEL'}      = $summary->{'_content'} if ( ! $summary->{'language'} );
-       }
-       foreach my $shortsummary ( @{$product->{'shortsummary'}} ){
-         $info{'SHORTLABEL'}      = $shortsummary->{'_content'} if ( ! $shortsummary->{'language'} );
-       }
-       $info{'RELNOTESURL'} = getUrl($product,$arch,"releasenotes");
-
-       $info{'BASEARCHS'} = "";
-       foreach my $ar ( @$archSetList ) {
-           $info{'BASEARCHS'} .= "$archSets{$ar->{ref}}->{productarch} " if( $archSets{$ar->{ref}} );
-       }
-    } else {
-       # for SLE 12 and later
-       my $label="";
-       foreach my $shortsummary ( @{$product->{'summary'}} ){
-         $label = $shortsummary->{'_content'} if ( ! $shortsummary->{'language'} );
-       }
-       my $cpe = getCpeId($prodRef, $product);
-       $info{'DISTRO'}      = "$cpe,$label";
+    my $label="";
+    foreach my $shortsummary ( @{$product->{'summary'}} ){
+      $label = $shortsummary->{'_content'} if ( ! $shortsummary->{'language'} );
     }
+    my $cpe = getCpeId($prodRef, $product);
+    $info{'DISTRO'}      = "$cpe,$label";
     $options{'REPO_LOCATION'} = getUrl($product,$arch,"repository");
 
     $info{'LINGUAS'} = "";
@@ -419,10 +396,6 @@ sub createMetadata( $$$ )
           my $ref = $requiredArch->{ref};
           die( "ERROR: No such archset $ref\n" ) unless $archSets{$ref};
           push @onlyarch, $archSets{$ref}->{productarch} unless grep { $_ eq $archSets{$ref}->{productarch} } @onlyarch;
-        }
-        # In 11.4 and later noarch metapackages need explicit a onlyarch="noarch" in config because we do now fail on missing packages
-	if ((not defined $medium->{'mediastyle'}) || $medium->{'mediastyle'} eq "suse-11.1" || $medium->{'mediastyle'} eq "suse-11.2" || $medium->{'mediastyle'} eq "suse-11.3") {
-          push @onlyarch, "noarch" unless grep { $_ eq "noarch" } @onlyarch;
         }
       }
       my $h = { name => $pack->{name},
@@ -872,7 +845,7 @@ sub escapeProvides($)
 sub getMediaStyle($)
 {
     my( $prodRef ) = @_;
-    my $mediaStyle = "suse-11.1"; # fallback value
+    my $mediaStyle = "suse-tumbleweed"; # fallback value, always latest style so it may break
     my $medium = $prodRef->{mediasets}->{media}[0];
     $mediaStyle = $medium->{'mediastyle'} if (defined($medium->{'mediastyle'}));
     return $mediaStyle;
@@ -1048,15 +1021,9 @@ sub writeProductSPECfile( $$$$ )
     } else {
       $str =~ s/___BETA_VERSION___//g;
     }
-    if ((not defined $medium->{'mediastyle'}) || $medium->{'mediastyle'} eq "suse-11.1" || $medium->{'mediastyle'} eq "suse-11.2" || $medium->{'mediastyle'} eq "suse-11.3") {
-       # this is the product release, not a package release. should not be used anymore.
-       # this old way is a problem because it can produce leading zeros in product provides
-       $str =~ s/___RELEASE___/0%{?release}/g;
-    } else {
-       # product release is not really used so far, but defined in zypp stack. So let's
-       # support it. But it is so far 0 on all our products
-       $str =~ s/___RELEASE___/$product->{release}/g;
-    }
+    # product release is not really used so far, but defined in zypp stack. So let's
+    # support it. But it is so far 0 on all our products
+    $str =~ s/___RELEASE___/$product->{release}/g;
     $str =~ s/___PATCH_LEVEL___/$product->{'patchlevel'}/g;
     $str =~ s/___PACKAGE_NAME___/$product->{releasepkgname}/g;
     $str =~ s/___PRODUCT_NAME___/$product->{name}/g;
@@ -1072,16 +1039,6 @@ sub writeProductSPECfile( $$$$ )
  
     # write out the modified file.
     writestr($file, undef, $str);
-}
-
-sub createPreSelectPatternDepsOld ( $ ) {
-  my ( $patterns ) = @_;
-
-  my $pattern_lines="";
-  foreach my $pattern (@{$patterns->[0]->{'pattern'}}){
-      $pattern_lines.="Recommends:     pattern() = $pattern->{'name'}\n";
-  }
-  return $pattern_lines;
 }
 
 sub createPreSelectPatternDeps ( $ ) {
@@ -1141,26 +1098,13 @@ sub createSPECfileFlavors ( $$ ) {
       $product_flavors.="Provides:       product_flavor()\n";
       $product_flavors.="Provides:       flavor($flavor->{flavor})\n";
       if (defined($flavor->{'preselected_patterns'})){
-        if ($flavor->{'mediastyle'} ne "suse-sle12" && $flavor->{'mediastyle'} ne "suse-sle12-sp1" ) {
-          $product_flavors.=createPreSelectPatternDeps($flavor->{'preselected_patterns'});
-        } else {
-          $product_flavors.=createPreSelectPatternDepsOld($flavor->{'preselected_patterns'});
-        }
+        $product_flavors.=createPreSelectPatternDeps($flavor->{'preselected_patterns'});
       }
-      if ((not defined $flavor->{'mediastyle'}) || $flavor->{'mediastyle'} eq "suse-11.1" || $flavor->{'mediastyle'} eq "suse-11.2" || $flavor->{'mediastyle'} eq "suse-11.3") {
-        $product_flavors.="Provides:       product_flavor($product->{name}) = %version-%release\n";
-      } else {
-        # this is the product version and release, not a package release.
-        my $release = $product->{release};
-        $release ||= "0";
-        $product_flavors.="Provides:       product_flavor($product->{name}) = $product->{version}-$release\n";
-      }
+      # this is the product version and release, not a package release.
+      my $release = $product->{release};
+      $release ||= "0";
+      $product_flavors.="Provides:       product_flavor($product->{name}) = $product->{version}-$release\n";
       if (defined($flavor->{'productdependency'})){
-        # old compat code.
-        die("productdependency works only with new mediastyles") unless defined($defaultmedium->{'mediastyle'});
-        if ($defaultmedium->{'mediastyle'} ne "suse-11.1" && $defaultmedium->{'mediastyle'} ne "suse-11.2" && $defaultmedium->{'mediastyle'} ne "suse-11.3" && $defaultmedium->{'mediastyle'} ne "suse-12.1" && $defaultmedium->{'mediastyle'} ne "suse-sle11-sp2" ) {
-            die("productdependency must be defined per product for post 12.1 media styles");
-        }
         $product_flavors.=createProductDependencyLines($flavor->{'productdependency'});
       }
       foreach my $summary ( @{$product->{'summary'}} ){
@@ -1225,7 +1169,6 @@ sub writekwd ( $$$ ) {
 sub getCpeId ($$) {
     my ($prodRef, $product) = @_;
     my $mediaStyle = getMediaStyle($prodRef);
-    return undef if ($mediaStyle =~ /^suse-1[12].[123]$/ || $mediaStyle =~ /^suse-sle11/);
     my $tag = "/o"; # operating system
     # is this an add-on product?
     foreach my $flavor ( @{$prodRef->{mediasets}->{media}} ){
@@ -1397,9 +1340,7 @@ die("illegal product name: $product->{'name'}\n") if $product->{'name'} =~ /[\/\
 die("ERROR: File name does not match to product name ($infile/$prodRef->{'products'}->{'product'}[0]->{'name'}.product)\n") if not $infile =~ /.*\/$prodRef->{'products'}->{'product'}[0]->{'name'}.product$/;
 die("no support for multi product definitions\n") if $prodRef->{'products'}->{'product'}[1];
 my $mediaStyle = getMediaStyle($prodRef);
-unless ($mediaStyle =~ /^suse-1[12].[123]$/ || $mediaStyle =~ /^suse-sle11/) {
-  die("Do not set id attribute in product anymore.\n") if $prodRef->{'products'}->{'product'}[0]->{'id'};
-}
+die("Do not set id attribute in product anymore.\n") if $prodRef->{'products'}->{'product'}[0]->{'id'};
 $product->{'releasepkgname'} ||= "$product->{'name'}-release";
 
 #
@@ -1536,15 +1477,6 @@ foreach my $medium ( @$media ){
       $releasepkgname = $prodRef->{'products'}->{'product'}[0]->{'releasepkgname'};
     }
 
-    # bug compatibility for 11.3 and before (ignoring product name definition per media)
-    if ((not defined $medium->{'mediastyle'}) || $medium->{'mediastyle'} eq "suse-11.1" || $medium->{'mediastyle'} eq "suse-11.2" || $medium->{'mediastyle'} eq "suse-11.3") {
-      $productname = $prodRef->{'products'}->{'product'}[0]->{'name'};
-      if ($medium->{'product'}) {
-        print "WARNING: own product attribute \"product\" per media is used. This may create inconsistent medias!\n";
-        $productname = $medium->{'product'};
-      }
-    }
-   
     next if( $opt_m && $name ne $opt_m );
 
     # create one kiwi file each for every of the archsets
@@ -1556,17 +1488,11 @@ foreach my $medium ( @$media ){
           my $supportstates;
       
           my $kiwi = Storable::dclone(\%generalImage);
-	  if (defined($medium->{'mediastyle'}) && $medium->{'mediastyle'} ne "suse-11.1" && $medium->{'mediastyle'} ne "suse-11.2") {
-	      $kiwi->{schemaversion} = "4.1"; # new kiwi requires exact this version
-	      my $attrs = {image => "product"};
-	      $attrs->{'firmware'} = $medium->{'firmware'} if $medium->{'firmware'};
-	      $attrs->{'hybrid'} = 'true' if (defined($medium->{'run_hybridiso'})) && $medium->{'run_hybridiso'} eq "true";
-	      $kiwi->{preferences}->{type} = [$attrs];
-	  }else{
-	      # the schemE vs. schemA is intended by kiwi!
-	      $kiwi->{schemeversion} = "2.4"; # before openSUSE 11.3, until kiwi 3.74
-	      $kiwi->{preferences}->{type} = [{_content => "product"}];
-	  }
+	  $kiwi->{schemaversion} = "4.1"; # new kiwi requires exact this version
+	  my $attrs = {image => "product"};
+	  $attrs->{'firmware'} = $medium->{'firmware'} if $medium->{'firmware'};
+	  $attrs->{'hybrid'} = 'true' if (defined($medium->{'run_hybridiso'})) && $medium->{'run_hybridiso'} eq "true";
+	  $kiwi->{preferences}->{type} = [$attrs];
           $kiwi->{preferences}->{version} = "1.0.0"; # hardcoded to fullfill kiwi scheme, real version is defined elsewhere
           $kiwi->{preferences}->{packagemanager} = "zypper" ; # hardcoded since no other support exist yet.
       
