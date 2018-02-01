@@ -123,6 +123,7 @@ our $product = [
                    'project',   # input
                    'name',
                    'medium',
+                   'repoid',    # output for .prod file
                    'url',       # this conflicts with project/name/medium
                    $zypp,
                    'arch',      # for arch specific definitions
@@ -255,7 +256,7 @@ our $productdesc = [
         [[ 'repository' =>
            'path',
            'build',
-           'product_file',
+           'product_file'
         ]],
       ],
       [ 'archsets' =>

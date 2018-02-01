@@ -1300,68 +1300,68 @@ sub createProductFile ( $$ ) {
 
     $d->{"target"}  = $product->{'register'}->{'target'};
     $d->{"release"} = $product->{'register'}->{'release'} if defined($product->{'register'}->{'release'}); # < SLE 12
+    my $special_arch_pool_repo;
     my $special_arch_update_repo;
     my $special_arch_update_ncc;
-    if ($mediaStyle =~ /^suse-1[12].[123]$/ || $mediaStyle =~ /^suse-sle11/) {
-       # old style, export used repositories for support tool
-       my @r;
-       foreach my $repo ( @{$prodRef->{repositories}{repository} } ) {
-           next if defined($repo->{product_file}) && $repo->{product_file} eq "ignore";
-           # do only export when build name is specified
-           push @r, { "path" => $repo->{path} } if $repo->{path} =~ /^obs:\/\/(.*)\/(.*)\/(.*)/ && $1 && $2 && $3 ;
-       };
-       $d->{"repositories"}{"repository"} = \@r;
-    } else {
-       if ($mediaStyle =~ /^suse-sle12/) {
-         die("Define NCC targets instead of target") if $product->{'register'}->{'target'};
-         # SLE 12 medias require an end-of-life definition
-         die("400 endoflife not defined") unless defined($product->{'endoflife'});
-       }
-       # convert them to repoids
-       my @r;
-       foreach my $repo ( @{$product->{register}->{updates}->{repository}} ) {
-           my $obsurl = "obsrepository://$obsname/$repo->{project}/$repo->{name}";
-           if ($repo->{zypp}) {
-              die("400 zypp lacks alias attribute") unless $repo->{zypp}->{alias};
-              die("400 zypp lacks name attribute") unless $repo->{zypp}->{name};
-           }
-           if ($repo->{arch}) {
-              push @r, { "repoid" => "___INTERNAL_MARKER___" } unless $special_arch_update_repo;
-              $special_arch_update_repo.="%ifarch $repo->{arch}\n";
-              $special_arch_update_repo.="      <repository repoid=\"$obsurl\" />\n";
-              $special_arch_update_repo.="%endif\n";
-              next;
-           }
-           push @r, { "repoid" => $obsurl };
-       };
-       $d->{"updates"}{"repository"} = \@r;
+    if ($mediaStyle =~ /^suse-sle1[25]/) {
+      # SLE SCC repositry register section
+      die("Define NCC targets instead of target") if $product->{'register'}->{'target'};
+      die("400 endoflife not defined") unless defined($product->{'endoflife'});
+      # convert them to repoids
+      my @ur;
+      foreach my $repo ( @{$product->{register}->{updates}->{repository}} ) {
+          my $obsurl = "obsrepository://$obsname/$repo->{project}/$repo->{name}";
+          if ($repo->{zypp}) {
+             die("400 zypp lacks alias attribute") unless $repo->{zypp}->{alias};
+             die("400 zypp lacks name attribute") unless $repo->{zypp}->{name};
+          }
+          if ($repo->{arch}) {
+             push @ur, { "repoid" => "___INTERNAL_UPDATE_MARKER___" } unless $special_arch_update_repo;
+             $special_arch_update_repo.="%ifarch $repo->{arch}\n";
+             $special_arch_update_repo.="      <repository repoid=\"$obsurl\" />\n";
+             $special_arch_update_repo.="%endif\n";
+             next;
+          }
+          push @ur, { "repoid" => $obsurl };
+      };
+      $d->{"updates"}{"repository"} = \@ur;
+      my @pr;
+      foreach my $repo ( @{$product->{register}->{pool}->{repository}} ) {
+          my $obsurl = "obsrepository://$obsname/$repo->{project}/$repo->{name}";
+          if ($repo->{zypp}) {
+             die("400 zypp lacks alias attribute") unless $repo->{zypp}->{alias};
+             die("400 zypp lacks name attribute") unless $repo->{zypp}->{name};
+          }
+          if ($repo->{arch}) {
+             push @pr, { "repoid" => "___INTERNAL_POOL_MARKER___" } unless $special_arch_pool_repo;
+             $special_arch_pool_repo.="%ifarch $repo->{arch}\n";
+             $special_arch_pool_repo.="      <repository repoid=\"$obsurl\" />\n";
+             $special_arch_pool_repo.="%endif\n";
+             next;
+          }
+          push @pr, { "repoid" => $obsurl };
+      };
+      $d->{"pool"}{"repository"} = \@pr;
+      foreach my $dt ( @{$product->{register}->{updates}->{distrotarget}} ) {
+         $d->{"target"} = "___INTERNAL_NCC_MARKER___";
+         $special_arch_update_ncc.="%ifarch $dt->{arch}\n" if $dt->{'arch'};
+         $special_arch_update_ncc.="      <target>$dt->{'_content'}</target>\n";
+         $special_arch_update_ncc.="%endif\n" if $dt->{'arch'};
+         next;
+      }
+      $d->{flavor} = $product->{register}->{flavor} if defined($product->{register}->{flavor});
+      $zypp_product->{'register'} = $d;
     }
-    foreach my $dt ( @{$product->{register}->{updates}->{distrotarget}} ) {
-       $d->{"target"} = "___INTERNAL_NCC_MARKER___";
-       $special_arch_update_ncc.="%ifarch $dt->{arch}\n" if $dt->{'arch'};
-       $special_arch_update_ncc.="      <target>$dt->{'_content'}</target>\n";
-       $special_arch_update_ncc.="%endif\n" if $dt->{'arch'};
-       next;
-    }
-    $d->{flavor} = $product->{register}->{flavor} if defined($product->{register}->{flavor});
-    $zypp_product->{'register'} = $d;
 
     # Release package number shall go with the package release
     $zypp_product->{'release'} = $product->{release};
 
-    if ($mediaStyle =~ /^suse-11.[123]$/ || $mediaStyle eq "suse-sle11-sp2") {
-      $zypp_product->{'release'} = "%{release}";
-    }
-
     my $xml = XMLout( $BSProductXML::product, $zypp_product );
     die ( "ERROR: Unable to create xml for $product->{name} !" ) unless $xml;
     # replace arch specific parts
-    if ($special_arch_update_repo) {
-      $xml =~ s/.*___INTERNAL_MARKER___.*\n/$special_arch_update_repo/;
-    }
-    if ($special_arch_update_ncc) {
-      $xml =~ s/.*___INTERNAL_NCC_MARKER___.*\n/$special_arch_update_ncc/;
-    }
+    $xml =~ s/.*___INTERNAL_POOL_MARKER___.*\n/$special_arch_pool_repo/ if $special_arch_pool_repo;
+    $xml =~ s/.*___INTERNAL_UPDATE_MARKER___.*\n/$special_arch_update_repo/ if $special_arch_update_repo;
+    $xml =~ s/.*___INTERNAL_NCC_MARKER___.*\n/$special_arch_update_ncc/ if $special_arch_update_ncc;
     # add header
     $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n$xml";
     $zypp_product_file .= "cat >$pfile << EOF\n";
