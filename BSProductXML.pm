@@ -90,7 +90,6 @@ our $zypp = [ 'zypp' =>
 # Defines a single product, will be used in installed system to indentify it 
 our $product = [
            'product' =>
-           'id',            # obsolete, do not use anymore
            'schemeversion',
            [],
            'vendor',
@@ -123,7 +122,6 @@ our $product = [
                    'project',   # input
                    'name',
                    'medium',
-                   'repoid',    # output for .prod file
                    'url',       # this conflicts with project/name/medium
                    $zypp,
                    'arch',      # for arch specific definitions
@@ -138,17 +136,17 @@ our $product = [
                 [[ 'repository' =>
                    'project',   # input
                    'name',
-                   'repoid',    # output for .prod file
                    'arch',      # for arch specific definitions
                    $zypp,
                 ]],
               ],
-              [ 'repositories' =>
-                [[ 'repository' =>
-                   'path',
-                ]],
-              ], # this is for prod file export only, not used for SLE 12/openSUSE 13.2 media style anymore
            ],
+           [ 'repositories' =>
+             [[ 'repository' =>
+                'type',
+                'repoid',
+             ]],
+           ], # this is for prod file export only
            [ 'upgrades' =>     # to announce service pack releases
               [[ 'upgrade' =>
                  [],
