@@ -1278,6 +1278,7 @@ sub createProductFile ( $$ ) {
         push @r, { 'type' => 'update', "repoid" => $obsurl };
     };
     foreach my $repo ( @{$product->{register}->{pool}->{repository}} ) {
+        next unless defined($repo->{name});
         my $obsurl = "obsrepository://$obsname/$repo->{project}/$repo->{name}";
         if ($repo->{zypp}) {
            die("400 zypp lacks alias attribute") unless $repo->{zypp}->{alias};
