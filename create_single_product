@@ -1524,7 +1524,7 @@ foreach my $medium ( @$media ){
           }
 
           # add implicit the release packages to media
-          if (defined($medium->{'skip_release_package'} && $medium->{'skip_release_package'} ne "true"){
+          if (defined($medium->{'skip_release_package'}) && $medium->{'skip_release_package'} ne "true"){
             my $addarch = join( ",", @productarch );
             $kiwi->{instsource}->{repopackages}[0] ||= { "repopackage" => [] };
             push @{$kiwi->{instsource}->{repopackages}[0]->{repopackage}}, { "name" => $releasepkgname, addarch => $addarch };
