@@ -273,6 +273,7 @@ sub createProductOptions($$$)
     $varsH{MULTIPLE_MEDIA} = "true" if (defined($medium->{'debugmedia'}) && $medium->{'debugmedia'} > 1);
     $varsH{RUN_MEDIA_CHECK} = "true" if (defined($medium->{'run_media_check'})) && $medium->{'run_media_check'} ne "no" && $medium->{'run_media_check'} eq "false";
     $varsH{RUN_ISOHYBRID} = "true" if (defined($medium->{'run_hybridiso'})) && $medium->{'run_hybridiso'} eq "true";
+    $varsH{RUN_ISOHYBRID} = "rpi" if (defined($medium->{'run_hybridiso'})) && $medium->{'run_hybridiso'} eq "rpi";
     $varsH{MAKE_LISTINGS} = 'true' if (defined($medium->{'run_make_listings'}) && $medium->{'run_make_listings'} eq "true");
     $varsH{SHA1OPT} = "-x";
     $varsH{REPO_ONLY} = "true" if (defined($medium->{'repo_only'})) && $medium->{'repo_only'} ne "no" && $medium->{'repo_only'} ne "false";
