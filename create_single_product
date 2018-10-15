@@ -1490,7 +1490,7 @@ foreach my $medium ( @$media ){
 	  $kiwi->{schemaversion} = "4.1"; # new kiwi requires exact this version
 	  my $attrs = {image => "product"};
 	  $attrs->{'firmware'} = $medium->{'firmware'} if $medium->{'firmware'};
-	  $attrs->{'hybrid'} = 'true' if (defined($medium->{'run_hybridiso'})) && $medium->{'run_hybridiso'} eq "true";
+	  $attrs->{'hybrid'} = 'true' if (defined($medium->{'run_hybridiso'})) && $medium->{'run_hybridiso'} ne "false";
 	  $kiwi->{preferences}->{type} = [$attrs];
           $kiwi->{preferences}->{version} = "1.0.0"; # hardcoded to fullfill kiwi scheme, real version is defined elsewhere
           $kiwi->{preferences}->{packagemanager} = "zypper" ; # hardcoded since no other support exist yet.
