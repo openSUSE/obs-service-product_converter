@@ -324,8 +324,11 @@ sub createProductOptions($$$)
     my %info;
     $info{'VENDOR'}       = $product->{'vendor'};
     if (defined($obsname) && (defined($project)) && ("$project" ne "")){
-	my $flavor = $medium->{'flavor'} || $medium->{'type'}; 
-        $info{'REPOID'}       = "obsproduct://".$obsname."/".$project."/".$product->{'name'}."/".$product->{'version'}."/".$flavor."/".join( "-", @allarchs );
+	my @repoid;
+	foreach my $arch (@allarchs) {
+          push @repoid, "obsproduct://".$obsname."/".$project."/".$product->{'name'}."/".$product->{'version'}."/". $arch;
+	}
+        $info{'REPOID'} = join(" ", @repoid);
     }
     if (defined($medium->{'preselected_patterns'})){
         $info{'PATTERNS'} .= join(' ',map( $_->{'name'},@{$medium->{'preselected_patterns'}->[0]->{'pattern'}}));
@@ -1280,7 +1283,7 @@ sub createProductFile ( $$ ) {
     };
     foreach my $repo ( @{$product->{register}->{pool}->{repository}} ) {
         next unless defined($repo->{name});
-        my $obsurl = "obsrepository://$obsname/$repo->{project}/$repo->{name}";
+        my $obsurl = "obsproduct://$obsname/$repo->{project}/$product->{name}/$product->{version}/%{_target_cpu}";
         if ($repo->{zypp}) {
            die("400 zypp lacks alias attribute") unless $repo->{zypp}->{alias};
            die("400 zypp lacks name attribute") unless $repo->{zypp}->{name};
