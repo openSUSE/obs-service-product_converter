@@ -983,7 +983,7 @@ sub writeProductSPECfile( $$$$ )
         $str.="%define         betaversion $product->{'buildconfig'}->{'betaversion'}\n";
       }
       foreach my $summary ( @{$product->{'summary'}} ){
-        $str.="Summary:        $summary->{_content}\n" if ( ! $summary->{'language'} );
+        $str.="Summary:        $summary->{_content}%{?betaversion: %{betaversion}}\n" if ( ! $summary->{'language'} );
       }
       $str.="Version:        ".$product->{version}."\n";
       $str.="Release:        0\n"; # FIXME: check if this is this really handled via BS
@@ -1112,7 +1112,7 @@ sub createSPECfileFlavors ( $$ ) {
         $product_flavors.=createProductDependencyLines($flavor->{'productdependency'});
       }
       foreach my $summary ( @{$product->{'summary'}} ){
-        $product_flavors.="Summary:        $summary->{_content}\n" if ( ! $summary->{'language'} );
+        $product_flavors.="Summary:        $summary->{_content}%{?betaversion: %{betaversion}}\n" if ( ! $summary->{'language'} );
       }
       $product_flavors.="\n";
       $product_flavors.="%description $flavor->{flavor}\n";
