@@ -767,77 +767,6 @@ sub createFlavorReadme( $$ ){
     return $reame_file;
 }
 
-sub writeMigrationSPECfile( $$$$$ )
-{
-    my( $file, $prodRef, $product, $newpatchlevel, $migtarget ) = @_;
-    my $mproduct = Storable::dclone($product);
-    undef $mproduct->{summary};
-    undef $mproduct->{shortsummary};
-
-    if ($migtarget) {
-	$mproduct->{name} = $product->{name}."-".$migtarget."-migration";
-    } else {
-	$mproduct->{name} = $product->{name}."-SP".$newpatchlevel."-migration";
-    }
-
-    # Upgrade section must not be in migration to avoid double notification
-    delete $mproduct->{upgrades};
-
-    # Set default values for release package reference
-    $mproduct->{'installconfig'}->{'releasepackage'} = { 'flag' => "EQ" };
-    $mproduct->{'installconfig'}->{'releasepackage'}->{'name'} = '%{name}';
-    $mproduct->{'installconfig'}->{'releasepackage'}->{'version'} = '%{version}';
-    $mproduct->{'installconfig'}->{'releasepackage'}->{'release'} = '%{release}';
-
-    my $content="# ";
-    $content.="\n\n";
-
-    my $package_name = $mproduct->{name};
-    $package_name =~ s/\./_/g;
-    $content.="Name:           $package_name\n";
-
-    my $sum_str = "";
-    if ($migtarget) {
-	$sum_str = "$product->{name} $migtarget Migration Product";
-    } else {
-	$sum_str = "$product->{name} Service Pack $newpatchlevel Migration Product";
-    }
-    $content.="Summary:        $sum_str\n";
-    push @{$mproduct->{summary}}, { '_content' => $sum_str };
-    push @{$mproduct->{shortsummary}}, { '_content' => $sum_str };
-
-    $content.="Version:        ".$product->{version}."\n";
-    $content.="Release:        0\n";
-    $content.="License:        BSD-3-Clause\n";
-    $content.="Group:          System/Fhs\n";
-    $content.="Provides:       product()\n";
-    $content.="Provides:       product(".$mproduct->{name}.") = %{version}-%{release}\n";
-    $content.="Requires:       product(".$product->{name}.") = ".$product->{version}."\n";
-    $content.="AutoReqProv:    on\n";
-    $content.="BuildRoot:      %{_tmppath}/%{name}-%{version}-build\n";
-    $content.="\n%description\n";
-    if ($migtarget) {
-	$content.="Product to migrate to $product->{name} $migtarget.\n";
-    } else {
-	$content.="Product to migrate to $product->{name} Service Pack $newpatchlevel.\n";
-    }
-    $content.="\n\n";
-    $content.="\n%prep\n";
-    $content.="\n%build\n\n";
-    $content.="\n%install\n";
-    $content.=createProductFile($prodRef,$mproduct);
-    $content.="\n%clean\n";
-    $content.="rm -rf %buildroot\n";
-    $content.="\n%files\n";
-    $content.="%defattr(644,root,root,755)\n";
-    $content.="%dir /etc/products.d\n";
-    $content.="/etc/products.d/*.prod\n";
-    $content.="\n%changelog\n";
-
-    # write out the modified file.
-    writestr($file, undef, $content);      
-}
-
 sub escapeProvides($)
 {
     my( $string ) = @_;
@@ -1392,34 +1321,6 @@ parseArchsets( $prodRef->{archsets}{archset} );
 #
 # Create $product-release packages
 #
-
-# handle migration case
-if (defined($product->{migrationtarget})){
-  my $newpatchlevel = 0;
-  my $productname = $product->{name}."-".$product->{migrationtarget}."-migration";
-  # enforce correct upgrade product name
-  for my $upgrade ( @{$product->{upgrades}->{upgrade}||[]} ) {
-    $upgrade->{name} = $productname;
-    $upgrade->{product} = $productname;
-  }
-  my $packagename = $productname;
-  $packagename =~ s/\./_/g;
-  writeMigrationSPECfile( "$outdir/".$packagename.".spec",
-                          $prodRef, $product, $newpatchlevel, $product->{migrationtarget} );
-} elsif (defined($product->{patchlevel})){
-  my $newpatchlevel = $product->{'patchlevel'} + 1;
-  my $productname = $product->{name}."-SP".$newpatchlevel."-migration";
-
-  # enforce correct upgrade product name
-  for my $upgrade ( @{$product->{upgrades}->{upgrade}||[]} ) {
-    $upgrade->{name} = $productname;
-    $upgrade->{product} = $productname;
-  }
-
-  writeMigrationSPECfile( "$outdir/".$productname.".spec",
-                          $prodRef, $product, $newpatchlevel, undef);
-}
-
 my $SPECtemplateFile;
 if ($infile =~ /(.*\/)(.+)$/) {
   # not using $product->{releasepkgname} for compatibility reasons
