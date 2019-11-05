@@ -1030,6 +1030,10 @@ sub createSPECfileFlavors ( $$ ) {
       }
       $product_flavors.="Provides:       product_flavor()\n";
       $product_flavors.="Provides:       flavor($flavor->{flavor})\n";
+      foreach my $predecessor ( @{$product->{'predecessor'}} ){
+	$product_flavors.="Obsoletes:      $predecessor-release-$flavor->{flavor}\n";
+	$product_flavors.="Conflicts:      $predecessor-release-$flavor->{flavor}\n";
+      }
       if (defined($flavor->{'preselected_patterns'})){
         $product_flavors.=createPreSelectPatternDeps($flavor->{'preselected_patterns'});
       }
