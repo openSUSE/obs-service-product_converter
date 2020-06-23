@@ -923,6 +923,12 @@ sub writeProductSPECfile( $$$$ )
       $str.="\n___PRODUCT_DEPENDENCIES___\n";
       $str.="AutoReqProv:    on\n";
       $str.="BuildRoot:      %{_tmppath}/%{name}-%{version}-build\n";
+      if (defined($product->{register}->{updates}->{distrotarget})) {
+        $str.="# this package should only be available for the \"basearchs\" of a product\nExclusiveArch:";
+        foreach my $dt ( @{$product->{register}->{updates}->{distrotarget}} ) {
+          $str.=" $dt->{arch}";
+        }
+      }
       $str.="\n%description\n";
       for my $description ( @{$product->{'description'} || []} ){
         $str.="$description->{_content}\n" if ( ! $description->{'description'} );
@@ -1210,9 +1216,13 @@ sub createProductFile ( $$ ) {
         }
         push @r, { 'type' => 'update', "repoid" => $obsurl };
     };
+    my %seen_obsurl;
     foreach my $repo ( @{$product->{register}->{pool}->{repository}} ) {
         next unless defined($repo->{name});
         my $obsurl = "obsproduct://$obsname/$repo->{project}/$product->{name}/$product->{version}/%{_target_cpu}";
+        my $uniq_obsurl = $obsurl . ($repo->{arch}? "$repo->{arch}" : "");
+        next if defined($seen_obsurl{$uniq_obsurl});
+        $seen_obsurl{$uniq_obsurl} = 1;
         if ($repo->{zypp}) {
            die("400 zypp lacks alias attribute") unless $repo->{zypp}->{alias};
            die("400 zypp lacks name attribute") unless $repo->{zypp}->{name};
