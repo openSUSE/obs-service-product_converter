@@ -1184,14 +1184,12 @@ sub createProductFile ( $$ ) {
     my $cpe = getCpeId($prodRef, $product);
     $zypp_product->{'cpeid'} = $cpe if $cpe;
 
-    $d->{"target"}  = $product->{'register'}->{'target'};
     $d->{"release"} = $product->{'register'}->{'release'} if defined($product->{'register'}->{'release'}); # < SLE 12
     my $special_arch_repo;
     my $special_arch_update_ncc;
-    if ($mediaStyle =~ /^suse-sle1[25]/) {
-      # SLE SCC repositry register section
-      die("Define NCC targets instead of target") if $product->{'register'}->{'target'};
-      die("400 endoflife not defined") unless defined($product->{'endoflife'});
+    if ($product->{'register'}->{'target'}) {
+      $d->{"target"}  = $product->{'register'}->{'target'};
+    } elsif (defined $product->{register}->{updates}->{distrotarget}) {
       foreach my $dt ( @{$product->{register}->{updates}->{distrotarget}} ) {
          $d->{"target"} = "___INTERNAL_NCC_MARKER___";
          $special_arch_update_ncc.="%ifarch $dt->{arch}\n" if $dt->{'arch'};
