@@ -923,7 +923,7 @@ sub writeProductSPECfile( $$$$ )
       $str.="\n___PRODUCT_DEPENDENCIES___\n";
       $str.="AutoReqProv:    on\n";
       $str.="BuildRoot:      %{_tmppath}/%{name}-%{version}-build\n";
-      if (defined($product->{register}->{updates}->{distrotarget})) {
+      if (defined($product->{register}->{updates}->{distrotarget}[0])) {
         $str.="# this package should only be available for the \"basearchs\" of a product\nExclusiveArch:";
         foreach my $dt ( @{$product->{register}->{updates}->{distrotarget}} ) {
           $str.=" $dt->{arch}";
