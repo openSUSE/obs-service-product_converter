@@ -46,8 +46,18 @@ my $bsdir;
 my $obsname;
 my $project;
 
-# hardcoded for now
-$obsname = $::ENV{'OBS_NAME'} || "build.o.o";
+my $apiurl = $::ENV{'OBS_SERVICE_APIURL'};
+if ( ! ( $obsname = $::ENV{'OBS_NAME'} ) ) {
+    if ( $apiurl =~ /^http[s]{0,1}:\/\/api.opensuse.org/ ) {
+        $obsname = "build.o.o";
+    } elsif ( $apiurl =~ /^http[s]{0,1}:\/\/api.suse.de/ ) {
+        $obsname = "build.suse.de";
+    } elsif ( $apiurl =~ /^http[s]{0,1}:\/\/api.suse.com/ ) {
+        $obsname = "build.suse.com";
+    } else {
+        die( "ERROR: Couldn't detect obsname. Specify environment variable 'OBS_NAME'" );
+    }
+}
 
 
 # read the product xml file
