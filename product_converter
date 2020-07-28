@@ -8,6 +8,16 @@ if [ "$1" != "--outdir" -o ! -d "$2" ]; then
 fi
 outdir="$2"
 
+# Ugly hack to workaround evil wrapper scripts
+if [ -z "$OBS_NAME" ]; then
+  if [ -x /usr/bin/osc ]; then
+    echo "WARNING: OBS_NAME not set, trying request the server via osc ..."
+    OBS_NAME=`osc api /configuration | sed -n 's,.*<name>\(.*\)</name>.*,\1,p'`
+    echo "         We got $OBS_NAME as return"
+    echo
+  fi
+fi
+
 if [ -z "$OBS_NAME" ]; then
   echo "WARNING: OBS_NAME not set, identifiers will not match with server config!"
   echo "         This is fine for debugging, but not for production media!"
