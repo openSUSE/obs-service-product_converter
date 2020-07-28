@@ -8,6 +8,11 @@ if [ "$1" != "--outdir" -o ! -d "$2" ]; then
 fi
 outdir="$2"
 
+if [ -z "$OBS_NAME" ]; then
+  echo "WARNING: OBS_NAME not set, identifiers will not match with server config!"
+  echo "         This is fine for debugging, but not for production media!"
+fi
+
 # create all build descriptions
 for file in *.product; do
   if [ ! -r "$file" ]; then
