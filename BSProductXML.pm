@@ -191,6 +191,7 @@ our $product = [
               [],
              'producttheme',
              'betaversion',
+             'milestone', # alternative to betaversion for stable releases
              'mainproduct',
              'create_flavors',
              [ 'linguas' =>

@@ -1464,8 +1464,13 @@ foreach my $medium ( @$media ){
       
           my $outFile = "$outdir/$file.kiwi";
           my $supportFile= "$outdir/$file.kwd";
-      
+
           writexml( "$outFile$$", $outFile, $kiwi, $BSKiwiXML::kiwidesc );
+          if ( defined($product->{buildconfig}->{milestone}) ) {
+             open(FH, ">>", $outFile) or die "Unable to open file $outFile";
+	     print FH "\n<!-- OBS-Milestone: $product->{buildconfig}->{milestone} -->\n";
+	     close FH;
+          }
           writekwd( $supportFile, \%supportstates, "support_" ) if keys %supportstates > 0;
       }
     }
