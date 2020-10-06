@@ -1026,7 +1026,12 @@ sub createSPECfileFlavors ( $$ ) {
     foreach my $flavor ( @{$prodRef->{mediasets}->{media}} ){
       next if !defined($flavor->{'flavor'}) || $flavor->{'flavor'} eq '' || $seen{$flavor->{flavor}};
       $seen{$flavor->{flavor}} = 1;
-      $product_flavors.="%package $flavor->{flavor}\n";
+      # not using $product->{releasepkgname} since it always be initialed
+      if (defined($prodRef->{'products'}->{'product'}[0]->{'releasepkgname'}) && $prodRef->{'products'}->{'product'}[0]->{'releasepkgname'} ne '') {
+          $product_flavors.="%package -n $prodRef->{'products'}->{'product'}[0]->{'releasepkgname'}-$flavor->{flavor}\n";
+      } else {
+          $product_flavors.="%package $flavor->{flavor}\n";
+      }
       $product_flavors.="License:        BSD-3-Clause\n";
       $product_flavors.="Group:          System/Fhs\n";
       if ((defined($prodRef->{'project'}->{'name'})) && ("$prodRef->{'project'}->{'name'}" ne "")){
