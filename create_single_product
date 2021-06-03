@@ -941,8 +941,6 @@ sub writeProductSPECfile( $$$$ )
       $str.="___CREATE_PRODUCT_FILES___\n";
 # we could do this by default for base products
 #      $str.="___CREATE_OS_RELEASE_FILE___\n";
-      $str.="\n%clean\n";
-      $str.="rm -rf %buildroot\n";
       $str.="\n%files\n";
       $str.="%defattr(644,root,root,755)\n";
       $str.="%dir %{_sysconfdir}/products.d\n";
