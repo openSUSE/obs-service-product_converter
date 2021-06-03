@@ -1155,10 +1155,10 @@ sub createOsReleaseFile ($) {
     } else {
       $os_release_file .= "VERSION=\"%{version}";
     }
-    $os_release_file .= "%{?betaversion: }%{?betaversion}\"\n";
+    $os_release_file .= "%{?betaversion: %{betaversion}}\"\n";
 
     $os_release_file .= "VERSION_ID=\"%{version}\"\n";
-    $os_release_file .= "PRETTY_NAME=\"".$product->{'summary'}[0]->{_content}."%{?betaversion: (}%{?betaversion}%{?betaversion:)}\"\n" if $product->{'summary'};
+    $os_release_file .= "PRETTY_NAME=\"".$product->{'summary'}[0]->{_content}."%{?betaversion: (%{betaversion})}\"\n" if $product->{'summary'};
     $os_release_file .= "BUG_REPORT_URL=\"".$bugtracker."\"\n" if $bugtracker;
     $os_release_file .= "ID=\"".lc($name)."\"\n";
     $os_release_file .= "ID_LIKE=\"suse\"\n"; # We assume that the system is SuSE like when you use this converter
