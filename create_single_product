@@ -1305,6 +1305,8 @@ if (defined($product->{'baseversion'})) {
 #
 # Check missing information of release package requirement and set defaults if neeeded.
 #
+$product->{'installconfig'}->{'default_obs_download_url'} = '%{_download_url}'
+                if ( not defined($product->{'installconfig'}->{'default_obs_download_url'}) );
 $product->{'installconfig'}->{'releasepackage'} = { 'flag' => "EQ" }
                 if ( not defined($product->{'installconfig'}->{'releasepackage'}) );
 $product->{'installconfig'}->{'releasepackage'}->{'flag'} = 'EQ'

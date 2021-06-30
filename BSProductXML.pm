@@ -207,6 +207,7 @@ our $product = [
               'datadir',
               'descriptiondir',
               'default_obs_repository_name',
+              'default_obs_download_url',
               [ 'releasepackage' => 'name', 'flag', 'version', 'release' ],
               'distribution',
               [[ 'obsoletepackage' => '_content' ]],
