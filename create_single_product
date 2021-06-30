@@ -1305,8 +1305,6 @@ if (defined($product->{'baseversion'})) {
 #
 # Check missing information of release package requirement and set defaults if neeeded.
 #
-$product->{'installconfig'}->{'default_obs_download_url'} = '%{_download_url}'
-                if ( not defined($product->{'installconfig'}->{'default_obs_download_url'}) );
 $product->{'installconfig'}->{'releasepackage'} = { 'flag' => "EQ" }
                 if ( not defined($product->{'installconfig'}->{'releasepackage'}) );
 $product->{'installconfig'}->{'releasepackage'}->{'flag'} = 'EQ'
@@ -1317,6 +1315,11 @@ $product->{'installconfig'}->{'releasepackage'}->{'version'} = '%{version}'
                 if ( not defined($product->{'installconfig'}->{'releasepackage'}->{'version'}) );
 $product->{'installconfig'}->{'releasepackage'}->{'release'} = '%{release}'
                 if ( not defined($product->{'installconfig'}->{'releasepackage'}->{'release'}) );
+if (defined($product->{'installconfig'}->{'default_obs_repository_name'})) {
+  # only for newer product files where a default name has been configured
+  $product->{'installconfig'}->{'default_obs_download_url'} = '%{_download_url}'
+                if ( not defined($product->{'installconfig'}->{'default_obs_download_url'}) );
+};
 
 #
 # Create a kiwi configuration for each distribution flavor
