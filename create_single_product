@@ -758,7 +758,7 @@ sub createFlavorReadme( $$ ){
     foreach my $flavor ( @{$prodRef->{mediasets}->{media}} ){
       next if !defined($flavor->{'flavor'}) || $flavor->{'flavor'} eq '' || $seen{$flavor->{flavor}};
       $seen{$flavor->{flavor}} = 1;
-      my $readmedir = "\$RPM_BUILD_ROOT/%{_defaultdocdir}/$product->{releasepkgname}-$flavor->{flavor}";
+      my $readmedir = "%{buildroot}%{_defaultdocdir}/$product->{releasepkgname}-$flavor->{flavor}";
       $reame_file .= "mkdir -p $readmedir\n";
       $reame_file .= "cat >$readmedir/README << EOF\n";
       $reame_file .= "This package only exists for providing the product flavor \'$flavor->{flavor}\'.\n";
@@ -922,7 +922,6 @@ sub writeProductSPECfile( $$$$ )
       $str.=$productprovides;
       $str.="\n___PRODUCT_DEPENDENCIES___\n";
       $str.="AutoReqProv:    on\n";
-      $str.="BuildRoot:      %{_tmppath}/%{name}-%{version}-build\n";
       if (defined($product->{register}->{updates}->{distrotarget}[0])) {
         $str.="# this package should only be available for the \"basearchs\" of a product\nExclusiveArch:";
         foreach my $dt ( @{$product->{register}->{updates}->{distrotarget}} ) {
@@ -941,13 +940,11 @@ sub writeProductSPECfile( $$$$ )
       $str.="___CREATE_PRODUCT_FILES___\n";
 # we could do this by default for base products
 #      $str.="___CREATE_OS_RELEASE_FILE___\n";
-      $str.="\n%clean\n";
-      $str.="rm -rf %buildroot\n";
       $str.="\n%files\n";
       $str.="%defattr(644,root,root,755)\n";
-      $str.="%dir /etc/products.d\n";
-      $str.="/etc/products.d/*.prod\n";
-#      $str.="/etc/os-release\n";
+      $str.="%dir %{_sysconfdir}/products.d\n";
+      $str.="%{_sysconfdir}/products.d/*.prod\n";
+#      $str.="%{_sysconfdir}/os-release\n";
       $str.="\n%changelog\n";
 
     } else {
@@ -1085,22 +1082,22 @@ sub createSPECfileInstallSection ( $ ) {
                    $greeting = $summary->{'_content'} if ( ! $summary->{'language'} );
                 }
 
-                my $content="mkdir -p %{buildroot}/%{_sysconfdir}
-echo -e 'Welcome to ".$greeting." %{?betaversion:%{betaversion} }- Kernel \\r (\\l).\n\n' > %{buildroot}/etc/issue
-echo \"Welcome to ".$greeting." %{?betaversion:%{betaversion} }- Kernel %%r (%%t).\" > %{buildroot}/etc/issue.net
-echo \"#".$greeting." %{?betaversion:%{betaversion} }(%{_target_cpu})\" > %{buildroot}/etc/SuSE-release
-echo \"VERSION = %{version}\" >> %{buildroot}/etc/SuSE-release\n";
+                my $content="mkdir -p %{buildroot}%{_sysconfdir}
+echo -e 'Welcome to ".$greeting." %{?betaversion:%{betaversion} }- Kernel \\r (\\l).\n\n' > %{buildroot}%{_sysconfdir}/issue
+echo \"Welcome to ".$greeting." %{?betaversion:%{betaversion} }- Kernel %%r (%%t).\" > %{buildroot}%{_sysconfdir}/issue.net
+echo \"#".$greeting." %{?betaversion:%{betaversion} }(%{_target_cpu})\" > %{buildroot}%{_sysconfdir}/SuSE-release
+echo \"VERSION = %{version}\" >> %{buildroot}%{_sysconfdir}/SuSE-release\n";
 
                 $content.="PATCHLEVEL = ".$product->{'patchlevel'}."\n" if (defined($product->{'patchlevel'}));
-                $content.="mkdir -p %{buildroot}/%{_sysconfdir}
-echo \"Have a lot of fun...\" > %{buildroot}/etc/motd
-# Bug 404141 - /etc/YaST/control.xml should be owned by some package
-mkdir -p %{buildroot}/etc/YaST2/
-install -m 644 /CD1/control.xml %{buildroot}/etc/YaST2/
-install -m 644 -D /CD1/EULA.txt %{buildroot}/%{_docdir}/%{name}/%{product}-EULA.txt
+                $content.="mkdir -p %{buildroot}%{_sysconfdir}
+echo \"Have a lot of fun...\" > %{buildroot}%{_sysconfdir}/motd
+# Bug 404141 - %{_sysconfdir}/YaST/control.xml should be owned by some package
+mkdir -p %{buildroot}%{_sysconfdir}/YaST2/
+install -m 644 /CD1/control.xml %{buildroot}%{_sysconfdir}/YaST2/
+install -m 644 -D /CD1/EULA.txt %{buildroot}%{_docdir}/%{name}/%{product}-EULA.txt
 ";
 	}
-        $content="mkdir -p %{buildroot}/etc/products.d";
+        $content="mkdir -p %{buildroot}%{_sysconfdir}/products.d";
         return $content;
 }
 
@@ -1145,8 +1142,8 @@ sub getCpeId ($$) {
 sub createOsReleaseFile ($) {
     my ($prodRef, $product) = @_;
     my $bugtracker=getUrl($product,"i586","bugtracker");
-    my $rfile = "\$RPM_BUILD_ROOT/etc/os-release";
-    my $os_release_file = "mkdir -p \$RPM_BUILD_ROOT/etc\n";
+    my $rfile = "%{buildroot}%{_sysconfdir}/os-release";
+    my $os_release_file = "mkdir -p %{buildroot}%{_sysconfdir}\n";
     $os_release_file .= "cat >$rfile << EOF\n";
     my $name = $product->{'name'};
     # shall we strip ^SUSE_ here or better modify the name in SLE 12?
@@ -1158,10 +1155,10 @@ sub createOsReleaseFile ($) {
     } else {
       $os_release_file .= "VERSION=\"%{version}";
     }
-    $os_release_file .= "%{?betaversion: }%{?betaversion}\"\n";
+    $os_release_file .= "%{?betaversion: %{betaversion}}\"\n";
 
     $os_release_file .= "VERSION_ID=\"%{version}\"\n";
-    $os_release_file .= "PRETTY_NAME=\"".$product->{'summary'}[0]->{_content}."%{?betaversion: (}%{?betaversion}%{?betaversion:)}\"\n" if $product->{'summary'};
+    $os_release_file .= "PRETTY_NAME=\"".$product->{'summary'}[0]->{_content}."%{?betaversion: (%{betaversion})}\"\n" if $product->{'summary'};
     $os_release_file .= "BUG_REPORT_URL=\"".$bugtracker."\"\n" if $bugtracker;
     $os_release_file .= "ID=\"".lc($name)."\"\n";
     $os_release_file .= "ID_LIKE=\"suse\"\n"; # We assume that the system is SuSE like when you use this converter
@@ -1178,14 +1175,14 @@ sub createProductFile ( $$ ) {
     # not wanted there
     delete $zypp_product->{'releasepkgname'};
     my $d;
-    my $pfile = "\$RPM_BUILD_ROOT/etc/products.d/$product->{name}.prod";
+    my $pfile = "%{buildroot}%{_sysconfdir}/products.d/$product->{name}.prod";
     if (defined($product->{'endoflife'})&& $product->{'endoflife'} ne "" 
         && !($product->{'endoflife'} =~ /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/)) {
       die("400 endoflife not in ISO 8601 format (YYYY-MM-DD)");
     }
     my $mediaStyle = getMediaStyle($prodRef);
 
-    $zypp_product_file = "mkdir -p \$RPM_BUILD_ROOT/etc/products.d\n";
+    $zypp_product_file = "mkdir -p %{buildroot}%{_sysconfdir}/products.d\n";
     $zypp_product->{'arch'} = '%{_target_cpu}'; # write product architecture during rpm build
     $zypp_product->{'schemeversion'} = "0";
     my $cpe = getCpeId($prodRef, $product);
