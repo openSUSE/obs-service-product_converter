@@ -316,6 +316,7 @@ sub createProductOptions($$$)
     
     $options{'IGNORE_MISSING_REPO_PACKAGES'} = "true" if (defined($medium->{'ignore_missing_packages'}) && $medium->{'ignore_missing_packages'} eq "true");
     $options{'IGNORE_MISSING_META_PACKAGES'} = "true" if (defined($medium->{'ignore_missing_meta_packages'}) && $medium->{'ignore_missing_meta_packages'} eq "true");
+    $options{'USE_NEWEST_PACKAGE'} = "true" if (defined($medium->{'use_newest_version'}) && $medium->{'use_newest_version'} eq "true");
     $options{'PLUGIN_DIR'} = "/usr/share/kiwi/modules/plugins/$mediaStyle";
     $options{'INI_DIR'} = "/usr/share/kiwi/modules/plugins/$mediaStyle";
     $options{'BETA_VERSION'} = $product->{'buildconfig'}->{'betaversion'} if (defined($product->{'buildconfig'}->{'betaversion'}));
