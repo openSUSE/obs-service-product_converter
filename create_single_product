@@ -917,6 +917,7 @@ sub writeProductSPECfile( $$$$ )
       $str.="Release:        0\n"; # FIXME: check if this is this really handled via BS
       $str.="License:        BSD-3-Clause\n";
       $str.="Group:          System/Fhs\n";
+      $str.="%global debug_package %{nil}\n";
       $str.=$obsoletepackage;
       $str.=$productprovides;
       $str.="\n___PRODUCT_DEPENDENCIES___\n";
