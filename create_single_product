@@ -321,6 +321,7 @@ sub createProductOptions($$$)
     $options{'INI_DIR'} = "/usr/share/kiwi/modules/plugins/$mediaStyle";
     $options{'BETA_VERSION'} = $product->{'buildconfig'}->{'betaversion'} if (defined($product->{'buildconfig'}->{'betaversion'}));
     $options{'MAIN_PRODUCT'} = $product->{'buildconfig'}->{'mainproduct'} if (defined($product->{'buildconfig'}->{'mainproduct'}));
+    $options{'RUN_DEPENDENCY_CHECK'} = $medium->{'run_dependency_check'} if defined($medium->{'run_dependency_check'});
 
     my %info;
     $info{'VENDOR'}       = $product->{'vendor'};
