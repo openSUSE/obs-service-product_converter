@@ -266,6 +266,9 @@ sub createProductOptions($$$)
     if ( defined $medium->{'name'} ) {
       $varsH{MEDIUM_NAME} = $medium->{'name'}."-".join( "-", @allarchs );
     }
+    if ( defined $medium->{'volumeid'} ) {
+      $varsH{VOLUME_ID} = $medium->{'volumeid'};
+    }
     $varsH{PRODUCT_THEME} = $product->{'buildconfig'}->{'producttheme'};
     $varsH{SEPARATE_MEDIA} = "true" unless (defined($medium->{'separate'}) && $medium->{'separate'} eq 'false');
     $varsH{MULTIPLE_MEDIA} = "false";
