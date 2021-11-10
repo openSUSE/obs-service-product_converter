@@ -90,6 +90,7 @@ our $zypp = [ 'zypp' =>
 # Defines a single product, will be used in installed system to indentify it 
 our $product = [
            'product' =>
+           'id',            # obsolete, do not use anymore
            'schemeversion',
            [],
            'vendor',
@@ -123,8 +124,8 @@ our $product = [
                    'name',
                    'medium',
                    'url',       # this conflicts with project/name/medium
-                   $zypp,
                    'arch',      # for arch specific definitions
+                   $zypp,
                 ]],
               ],
               [ 'updates' =>
@@ -136,17 +137,24 @@ our $product = [
                 [[ 'repository' =>
                    'project',   # input
                    'name',
+                   'repoid',    # output for .prod file
+                   'url',       # this conflicts with project/name/medium
                    'arch',      # for arch specific definitions
                    $zypp,
                 ]],
               ],
+              [ 'repositories' =>
+                [[ 'repository' =>
+                   'path',
+                ]],
+              ], # this is for prod file export only, not used for SLE 12/openSUSE 13.2 media style anymore
            ],
            [ 'repositories' =>
              [[ 'repository' =>
                 'type',
                 'repoid',
              ]],
-           ], # this is for prod file export only
+           ], # this is for prod file export only since Leap 15
            [ 'upgrades' =>     # to announce service pack releases
               [[ 'upgrade' =>
                  [],
@@ -191,7 +199,7 @@ our $product = [
               [],
              'producttheme',
              'betaversion',
-             'milestone', # alternative to betaversion for stable releases
+             'milestone',   # alternative to betaversion, not causing a beta warning
              'mainproduct',
              'create_flavors',
              [ 'linguas' =>
@@ -206,8 +214,8 @@ our $product = [
               'defaultlang',
               'datadir',
               'descriptiondir',
-              'default_obs_repository_name',
-              'default_obs_download_url',
+              'default_obs_repository_name', # needs to be a sync with the name in /distributions
+              'default_obs_download_url',    # contains %_download_url
               [ 'releasepackage' => 'name', 'flag', 'version', 'release' ],
               'distribution',
               [[ 'obsoletepackage' => '_content' ]],
@@ -258,7 +266,7 @@ our $productdesc = [
         [[ 'repository' =>
            'path',
            'build',
-           'product_file'
+           'product_file',
         ]],
       ],
       [ 'archsets' =>
@@ -281,6 +289,7 @@ our $productdesc = [
             'volumeid',                     # non standard volume id inside of iso files
             'firmware',
             'registration',
+            'create_repomd', # old format only
             'sourcemedia',
             'debugmedia',
             'separate',
@@ -299,7 +308,10 @@ our $productdesc = [
             'run_dependency_check', # set either to "warn" or "error"
             'allow_overflow',
             'next_media_in_set',
+            'separate',
             'size',
+            'datadir',        # old format only
+            'descriptiondir', # old format only
             [[ 'preselected_patterns' => 
                [[ 'pattern' =>
                   'name',
