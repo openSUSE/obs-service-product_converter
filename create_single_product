@@ -498,7 +498,6 @@ sub useToPackages( $$$ )
 	    # there might be additional packages listed in the group.
 	    if( $useState->{package} ) {
 		foreach my $addPack ( @{$useState->{package} } ) {
-		    # print Dumper( $addPack ) . "\n";
 		    my $relType = $addPack->{relationship};
 	            die( "ERROR: Unknown relation type string for package add!\n" ) unless( $relType eq "requires" || $relType eq "recommends" || $relType eq "suggests" );
 		    if( ( $useRequired    && $addPack->{relationship} eq "requires") ||
@@ -508,6 +507,7 @@ sub useToPackages( $$$ )
 			my %tmp;
                         $tmp{name} = $addPack->{name};
                         $tmp{medium} = $addPack->{medium} if (defined($addPack->{medium}));
+                        $tmp{module} = $addPack->{module} if (defined($addPack->{module}));
                         if ($addPack->{removearch}) {
                           next if containsMyArch( $prodRef, $archSetList, $addPack->{removearch} );
                           $tmp{removearch} = $addPack->{removearch};
@@ -683,8 +683,8 @@ sub expandPackages( $ )
 	    $packValues{name} = $packRef->{name};
 	    if( $groupRef->{platform} ) {
 		# forcerepo??
-		foreach my $tag ('forcearch', 'addarch', 'onlyarch', 'removearch', 'source', 'script', 'medium' ) {
-		    $packValues{$tag} = $groupRef->{platform}->{$tag} if( $groupRef->{platform}->{$tag} );
+		foreach my $tag ('forcearch', 'addarch', 'onlyarch', 'removearch', 'source', 'script', 'medium', 'module' ) {
+		    $packValues{$tag} = $groupRef->{platform}->{$tag} if $groupRef->{platform}->{$tag};
 		}
 	    }
 
@@ -1478,7 +1478,6 @@ foreach my $medium ( @$media ){
       
           my $outFile = "$outdir/$file.kiwi";
           my $supportFile= "$outdir/$file.kwd";
-
           writexml( "$outFile$$", $outFile, $kiwi, $BSKiwiXML::kiwidesc );
           if ( defined($product->{buildconfig}->{milestone}) ) {
              open(FH, ">>", $outFile) or die "Unable to open file $outFile";
