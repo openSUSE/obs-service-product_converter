@@ -818,7 +818,11 @@ sub writeProductSPECfile( $$$$ )
     die("product register flavor with invalid content") if defined($product->{register}->{flavor}) &&
        $product->{register}->{flavor} ne 'module' && $product->{register}->{flavor} ne 'extension';
     die("product release is not set but required") unless defined($product->{release}) and $product->{release} ne "";
-    $productprovides.="Provides:       product() = $product->{name}\n";
+    if ($product->{name} =~ /.*-.*-.*/) {
+        $productprovides.="Provides:       product() = ".escapeProvides($product->{name})."\n";
+    } else {
+        $productprovides.="Provides:       product() = $product->{name}\n";
+    }
     $productprovides.="Provides:       product(".$product->{name}.") = $product->{version}-$product->{release}\n";
     foreach my $r ( @{$product->{register}->{pool}->{repository}} ) {
        if ($r->{'url'}) {
