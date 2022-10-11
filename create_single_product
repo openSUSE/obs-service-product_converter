@@ -819,8 +819,10 @@ sub writeProductSPECfile( $$$$ )
        $product->{register}->{flavor} ne 'module' && $product->{register}->{flavor} ne 'extension';
     die("product release is not set but required") unless defined($product->{release}) and $product->{release} ne "";
     if ($product->{name} =~ /.*-.*-.*/) {
+        # it should be always encoded that way, but ..
         $productprovides.="Provides:       product() = ".escapeProvides($product->{name})."\n";
     } else {
+        # ... to stay backward compatible
         $productprovides.="Provides:       product() = $product->{name}\n";
     }
     $productprovides.="Provides:       product(".$product->{name}.") = $product->{version}-$product->{release}\n";
