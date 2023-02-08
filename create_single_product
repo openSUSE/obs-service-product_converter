@@ -344,6 +344,7 @@ sub createProductOptions($$$)
     }
     my $cpe = getCpeId($prodRef, $product);
     $info{'DISTRO'}      = "$cpe,$label";
+    $info{'PURL_DISTRO'}  = $product->{'purl_distro'} if $product->{'purl_distro'};
     $options{'REPO_LOCATION'} = getUrl($product,$arch,"repository");
 
     $info{'LINGUAS'} = "";

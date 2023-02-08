@@ -105,6 +105,7 @@ our $product = [
            'arch',
            'cpeid',         # generated, not for input
            'productline',
+           'purl_distro',   # the distro string of spdx to be used with this product
            'releasepkgname', # defaults to $name-release
            [ 'codestream' =>
               [],
