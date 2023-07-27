@@ -317,6 +317,7 @@ sub createProductOptions($$$)
       $options{'DEBUGMEDIUM'} = $medium->{'debugmedia'};
     };
     
+    $options{'DOWNLOAD_MIRROR_POLICY'} = "false" if (defined($medium->{'download_mirror_policy'}) && $medium->{'download_mirror_policy'} eq "false");
     $options{'IGNORE_MISSING_REPO_PACKAGES'} = "true" if (defined($medium->{'ignore_missing_packages'}) && $medium->{'ignore_missing_packages'} eq "true");
     $options{'IGNORE_MISSING_META_PACKAGES'} = "true" if (defined($medium->{'ignore_missing_meta_packages'}) && $medium->{'ignore_missing_meta_packages'} eq "true");
     $options{'USE_NEWEST_PACKAGE'} = "true" if (defined($medium->{'use_newest_version'}) && $medium->{'use_newest_version'} eq "true");
