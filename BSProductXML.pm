@@ -203,6 +203,7 @@ our $product = [
              'milestone',   # alternative to betaversion, not causing a beta warning
              'mainproduct',
              'create_flavors',
+             'sync_build_counter',
              [ 'linguas' =>
                [],
                [[ 'language' => '_content' ]],

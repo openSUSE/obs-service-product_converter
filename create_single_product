@@ -849,8 +849,6 @@ sub writeProductSPECfile( $$$$ )
     }
     my $cpe = getCpeId($prodRef, $product);
     $productprovides.="Provides:       product-cpeid() = ".escapeProvides($cpe)."\n" if $cpe;
-#    $productprovides.="Provides:       product-type()\n";
-#    $productprovides.="Provides:       product-flags()\n";
     foreach my $url ( @{$product->{'urls'}->{'url'}} ){
       $productprovides.="Provides:       product-url(".escapeProvides($url->{'name'}).") = ".escapeProvides($url->{'_content'})."\n";
     }
@@ -926,7 +924,8 @@ sub writeProductSPECfile( $$$$ )
         $str.="Summary:        $summary->{_content}%{?betaversion: %{betaversion}}\n" if ( ! $summary->{'language'} );
       }
       $str.="Version:        ".$product->{version}."\n";
-      $str.="Release:        0\n"; # FIXME: check if this is this really handled via BS
+      $str.="#!BcntSyncTag: $product->{name}\n" unless $product->{'buildconfig'}->{'sync_build_counter'} && $product->{'buildconfig'}->{'sync_build_counter'} eq 'false';
+      $str.="Release:        0\n";
       $str.="License:        BSD-3-Clause\n";
       $str.="Group:          System/Fhs\n";
       $str.="%global debug_package %{nil}\n";
@@ -1489,6 +1488,11 @@ foreach my $medium ( @$media ){
           if ( defined($product->{buildconfig}->{milestone}) ) {
              open(FH, ">>", $outFile) or die "Unable to open file $outFile";
 	     print FH "\n<!-- OBS-Milestone: $product->{buildconfig}->{milestone} -->\n";
+	     close FH;
+          }
+          if ( !$product->{'buildconfig'}->{'sync_build_counter'} || $product->{'buildconfig'}->{'sync_build_counter'} ne 'false' ) {
+	     open(FH, ">>", $outFile) or die "Unable to open file $outFile";
+	     print FH "\n<!-- OBS-BcntSyncTag: $product->{name} -->\n";
 	     close FH;
           }
           writekwd( $supportFile, \%supportstates, "support_" ) if keys %supportstates > 0;
